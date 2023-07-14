@@ -3,3 +3,4 @@ torchvision==0.15.1
 ultralytics==0.8.82
 supervision==0.3.0
 streamlit
+opencv-python
