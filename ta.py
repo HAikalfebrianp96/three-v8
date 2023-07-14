@@ -1,7 +1,8 @@
-import cv2
+
 from ultralytics import YOLO
 import supervision as sv
 import streamlit as st
+import cv2
 
 st.title("Look Up at the Stars")
 video_placeholder = st.image([])
