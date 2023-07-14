@@ -1,27 +1,14 @@
 import cv2
-import argparse
-
 from ultralytics import YOLO
 import supervision as sv
-import numpy as np
+import streamlit as st
 
-
-def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="YOLOv8 live")
-    parser.add_argument(
-        "--webcam-resolution",
-        default=[1280, 720],
-        nargs=2,
-        type=int
-    )
-    args = parser.parse_args()
-    return args
-
-
+st.title("Look Up at the Stars")
+video_placeholder = st.image([])
 def cari_tinggi_asli(h, w):
     hasil = ''
-
-    nilaiPerbandingan = 4/min(h, w)
+    real = 4
+    nilaiPerbandingan = real / min(h, w)
     tinggiAsli = h * nilaiPerbandingan
     if 1 <= tinggiAsli < 2:
         hasil = 'Height: (1 - 2) meters'
@@ -41,20 +28,14 @@ def cari_tinggi_asli(h, w):
         hasil = 'Height: (9 - 10) meters'
     else:
         hasil = 'Too high'
-
     return hasil
-
-
 def main():
-    args = parse_arguments()
-    frame_width, frame_height = args.webcam_resolution
-
-    cap = cv2.VideoCapture("videoframe.mp4")
+    frame_width, frame_height = 1280, 720  # Define the frame resolution
+    cap = cv2.VideoCapture("yy.mp4")  # Capture video from webcam
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_height)
-
     model = YOLO("1000.pt")
-
+    display_width, display_height = 1220, 640  # Define the display size
     box_annotator = sv.BoxAnnotator(
         thickness=2,
         text_thickness=1,
@@ -64,13 +45,16 @@ def main():
 
     while True:
         ret, frame = cap.read()
-        tinggi = 10
+
+        if not ret:
+            break
+
         result = model(frame)[0]
         detections = sv.Detections.from_yolov8(result)
-        detections = detections[detections.confidence > 0.5]
+        detections = detections[detections.confidence > 0.70]
 
         labels_bawah = [
-            f"{cari_tinggi_asli(xy[3]-xy[1],xy[2]-xy[0])}"
+            f"{cari_tinggi_asli(xy[3] - xy[1], xy[2] - xy[0])}"
             for xy, confidence, class_id, _
             in detections
         ]
@@ -80,13 +64,13 @@ def main():
             in detections
         ]
         frame = box_annotator.annotate(
-            scene=frame,  detections=detections, labels_atas=labels_atas, labels_bawah=labels_bawah)
-
-        cv2.imshow("yolov8", frame)
-
-        if (cv2.waitKey(30) == 27):
+            scene=frame, detections=detections, labels_atas=labels_atas, labels_bawah=labels_bawah
+        )
+        if frame is not None:
+            frame = cv2.resize(frame, (display_width, display_height))  # Resizing the frame
+        video_placeholder.image(frame, channels="BGR")  # Update the video frame in the placeholder
+        if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-
-
+    cap.release()
 if __name__ == "__main__":
     main()
