@@ -1,1 +1,5 @@
-dvsdssddsnadiahidhaidhaihdaidhia
+pip install numpy==1.24.2
+pip install torchvision==0.15.1
+pip install ultralytics==0.8.82
+pip install supervision==0.3.0
+pip install streamlit
